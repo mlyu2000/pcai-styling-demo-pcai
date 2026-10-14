@@ -1,0 +1,90 @@
+# PCAI Styling Demo — single source of truth for platform-adapter config.
+# Everything that differs between PCAI environments lives here (domain,
+# namespaces, registry, endpoint URLs, model identity, secrets-by-name).
+# No secret VALUES are committed — only secret names/keys are referenced.
+
+platform:
+  domain: "styling-demo.aie.cs1.ctc.sg.lab"        # the host the UI/API is served on (changes per PCAI platform)
+  namespace: "styling-demo"                          # where backend + frontend + VirtualService run
+  gateway: "istio-system/ezaf-gateway"              # Istio gateway that fronts the domain
+  registry: "registry.ctc.sg.lab:5000"              # airgapped registry hosting the demo images
+  imagePullSecret: "regcred"
+  modelNamespace: "project-user-aieadmin"          # where MLIS inference services run (I2V / image-gen / LLM)
+
+images:
+  backend:  { tag: "v45" }
+  frontend: { tag: "v23" }
+
+# --- platform-provided inference endpoints (the "adaptive" part) ---
+# On another PCAI platform these URLs/paths/tokens change, but the chart
+# and code do not. The backend reads them from env; values.yaml sets them.
+endpoints:
+  # I2V (Wan2.2-TI2V-5B via vLLM-Omni, OpenAI-compatible /v1/videos)
+  mlisI2v:
+    url: "http://pcai-i2v-predictor.project-user-aieadmin.svc.cluster.local:80"
+    model: "/models/wan22-ti2v-5b"
+  # Prompt-agent LLM (LiteLLM proxy, OpenAI-compatible)
+  llm:
+    url: "http://litellm-helm.project-user-aieadmin.svc.cluster.local:4000"
+    model: "qwen3-8-27b-int4-dflash2-r2"
+  # Image model (Qwen-Image-Edit GGUF via sdcpp-server / stable-diffusion.cpp
+  # on MLIS — replaces Z-Image-Turbo). i2i uses POST /v1/images/edits; sdcpp
+  # reads strength/steps/seed only from the <sd_cpp_extra_args> JSON embedded
+  # in the prompt, so sdCppExtra must be true for this server (false = the
+  # plain form fields used by vLLM-Omni). sdcpp has no /v1/chat/completions
+  # t2i route; with sdCppExtra the backend diverts t2i to
+  # /v1/images/generations (prompt-adherent). Optional — leave url empty to
+  # disable the image stages (deterministic PIL fallbacks keep the demo
+  # runnable).
+  imageGen:
+    url: "http://pcai-qwen-image-edit-gguf-predictor.project-user-aieadmin.svc.cluster.local:80"
+    model: "pcai-qwen-image-edit-gguf"
+    sdCppExtra: true
+
+# --- model capabilities (drives dynamic UI: name, duration, resolutions) ---
+model:
+  displayName: "Wan2.2-TI2V-5B (I2V)"
+  maxDurationSec: 120          # 2-minute cap requested by the demo
+  minDurationSec: 4
+  fps: 8
+  maxFrames: 121
+  minFrames: 9
+  resolutions:
+    - "1280x704"
+    - "960x544"
+    - "832x480"
+  defaultResolution: "1280x704"
+
+# --- secrets (NAMES only; values injected by scripts/deploy-secrets.sh) ---
+secrets:
+  llmKey:      { name: "litellm-key",     key: "key" }
+  mlisKey:     { name: "mlis-key",        key: "key" }
+  # image model reuses the same MLIS endpoint key as the video model (same
+  # endpoint scheme on a given platform); point this elsewhere if a platform
+  # issues a separate token for the image model.
+  imageGenKey: { name: "mlis-key",        key: "key" }
+  stylingKey:  { name: "styling-api-key", key: "key" }
+
+# --- resource sizing ---
+backend:
+  replicas: 1
+  cpu: { request: "250m", limit: "1" }
+  memory: { request: "1Gi", limit: "2Gi" }
+frontend:
+  cpu: { request: "100m", limit: "250m" }
+  memory: { request: "64Mi", limit: "128Mi" }
+
+# --- results storage ---
+# type "pvc" persists generated videos/stills/templates across backend
+# restarts (deploys, OOM, node drain) — requires an existing PVC in the
+# namespace (create it once: kubectl apply the PVC manifest). type
+# "emptyDir" is ephemeral: everything is wiped on restart (portable default).
+storage:
+  results:
+    type: "pvc"
+    pvcName: "styling-results"
+    size: "10Gi"
+    # storageClassName is optional: leave empty to use the platform default,
+    # or name one (e.g. nfs / nfs-csi / rook-ceph-block) to be explicit.
+    storageClass: "nfs"
+    emptyDirSize: "8Gi"

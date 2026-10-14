@@ -1,0 +1,6 @@
+# Registration-only values. The real workloads (styling-backend/frontend) are
+# kubectl-managed in the styling-demo namespace and already carry the hpe-ezua
+# health labels. This chart only records the endpoint for the EzApps UI tile.
+ezua:
+  virtualService:
+    endpoint: "styling-demo.aie.cs1.ctc.sg.lab"

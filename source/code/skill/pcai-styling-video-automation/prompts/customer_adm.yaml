@@ -1,0 +1,27 @@
+# Prompt pack: customer_adm — Mario's (ADM) VERBATIM Gemini/Nano-Banana prompts,
+# extracted from the 2026-09-29 meeting screenshots (PCAI_Demo_Step_Procedure.md §4b).
+# Intentionally short conversational one-liners — this pack reproduces the CUSTOMER'S
+# process for like-for-like comparison against our tuned pack.
+# Slots: {view_angle} {color} {scene_desc} {requirement}
+
+# P4 — "please make another front view angle from this design"
+sketch_front: "please make another front view angle from this design"
+
+# P2 — "also make the rear quarter view with the same format, background color, shading, color and artstyle"
+sketch_rear: "also make the rear quarter view with the same format, background color, shading, color and artstyle"
+
+# P3 (P1 is the same step, earlier wording) — combine design into scene, keep everything
+combine: "change the car design on the first image in to car design on the second image, strictly keep / do not alter the first image's layout, view, body color, shading, reflection feeling, blending seamlessly, and ambience of first image, also maintain the overall image style"
+
+# P6 — 3-second camera-movement video from first image to second image
+video: "please make 3 seconds video animate the camera movement view from first image until to second image, STRICTLY KEEP ALL THE CAR DESIGN ELEMENT, DO NOT IMPROVIZE WITH THE CAR DESIGN"
+
+# P5 — recolor, parameterized (their literal: "change the car color into silver paint")
+recolor: "change the car color into {color} paint"
+
+# P5b — alt view from the customer's own wording family ("please make another ... view angle from this design")
+alt_view: "please make another {view_angle} view angle from this design, with the same format, background, shading and artstyle"
+
+image_model: "gemini-3.1-flash-image"
+video_model: "veo-3.1-fast-generate-preview"
+video_seconds: 3

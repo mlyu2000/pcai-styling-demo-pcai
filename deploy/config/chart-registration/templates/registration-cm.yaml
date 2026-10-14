@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pcai-styling-registration
+  labels:
+    hpe-ezua/app: pcai-styling
+    hpe-ezua/component: app
+    hpe-ezua/type: vendor-service
+    app.kubernetes.io/part-of: pcai-styling-demo
+data:
+  app: "pcai-styling"
+  component: "pcai-styling"
+  appType: "AI"
+  endpoint: "{{ .Values.ezua.virtualService.endpoint }}"
+  description: "Astra AI Styling / video-generation demo (image-to-video, AI styling)"

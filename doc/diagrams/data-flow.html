@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PCAI Styling Demo — Data Flow</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#020617; color:#e2e8f0; font-family:'JetBrains Mono','Fira Code',Consolas,monospace; padding:32px; }
+  .header { display:flex; align-items:center; gap:12px; margin-bottom:6px; }
+  .pulse { width:10px; height:10px; border-radius:50%; background:#22d3ee; animation:pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+  h1 { font-size:18px; font-weight:600; letter-spacing:.5px; }
+  .sub { font-size:11px; color:#64748b; margin-bottom:20px; }
+  .card-frame { border:1px solid #1e293b; border-radius:12px; padding:12px; background:#0f172a; }
+  svg { display:block; width:100%; height:auto; }
+  .cards { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:18px; }
+  .card { border:1px solid #1e293b; border-radius:10px; background:#0f172a; padding:14px 16px; }
+  .card-header { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+  .card-dot { width:8px; height:8px; border-radius:50%; }
+  .card-dot.cyan{background:#22d3ee} .card-dot.amber{background:#fbbf24} .card-dot.violet{background:#a78bfa}
+  .card h3 { font-size:12px; font-weight:600; }
+  .card ul { list-style:none; }
+  .card li { font-size:10px; color:#94a3b8; line-height:1.7; }
+  .footer { margin-top:16px; font-size:9px; color:#475569; text-align:center; }
+  text { font-family:'JetBrains Mono','Fira Code',Consolas,monospace; }
+</style>
+</head>
+<body>
+<div class="header"><div class="pulse"></div><h1>PCAI Styling Demo — Data Flow</h1></div>
+<div class="sub">what data moves, in what form, and where it lands · base64 in → data-URIs back (flow) · PNG/JPEG bytes → MP4 on NFS (video) · the stateful stores</div>
+
+<div class="card-frame">
+<svg viewBox="0 0 1220 920" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.5"/>
+    </pattern>
+    <marker id="arr" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 z" fill="#64748b"/>
+    </marker>
+    <marker id="arr-cyan" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 z" fill="#22d3ee"/>
+    </marker>
+    <marker id="arr-em" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 z" fill="#34d399"/>
+    </marker>
+    <marker id="arr-amber" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 z" fill="#fbbf24"/>
+    </marker>
+    <marker id="arr-violet" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 z" fill="#a78bfa"/>
+    </marker>
+    <marker id="arr-rose" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 z" fill="#fb7185"/>
+    </marker>
+  </defs>
+  <rect width="1220" height="920" fill="#020617"/>
+  <rect width="1220" height="920" fill="url(#grid)"/>
+
+  <!-- ============ TOP ROW: the request payload + inputs ============ -->
+  <text x="40" y="42" font-size="11" fill="#e2e8f0" font-weight="bold">A · INPUT — what the client sends</text>
+
+  <rect x="40" y="54" width="330" height="118" rx="8" fill="#0f172a"/>
+  <rect x="40" y="54" width="330" height="118" rx="8" fill="rgba(8,51,68,0.4)" stroke="#22d3ee" stroke-width="1.4"/>
+  <text x="54" y="74" font-size="10" fill="#22d3ee" font-weight="bold">Browser / agent request</text>
+  <text x="54" y="90" font-size="8" fill="#94a3b8">POST /api/flow/{sketch,combine,view,recolor,video}</text>
+  <text x="54" y="104" font-size="8" fill="#94a3b8">body: { image: data:image/...;base64,.., prompt,</text>
+  <text x="66" y="118" font-size="8" fill="#7dd3fc">requirement, seed, strength, [design_image/scene_image] }</text>
+  <text x="54" y="134" font-size="8" fill="#94a3b8">+ optional provider: {brain|i2v|image:{base_url,</text>
+  <text x="66" y="148" font-size="8" fill="#7dd3fc">api_key, model}}  — request-scoped, never stored</text>
+  <text x="54" y="162" font-size="7.5" fill="#64748b">images capped by MAX_IMAGES_MB (15) server-side</text>
+
+  <rect x="400" y="54" width="330" height="118" rx="8" fill="#0f172a"/>
+  <rect x="400" y="54" width="330" height="118" rx="8" fill="rgba(30,41,59,0.5)" stroke="#94a3b8" stroke-width="1.4"/>
+  <text x="414" y="74" font-size="10" fill="#cbd5e1" font-weight="bold">Prompt pack (agent-side file)</text>
+  <text x="414" y="90" font-size="8" fill="#94a3b8">prompts/tuned.yaml — production prompts</text>
+  <text x="414" y="104" font-size="8" fill="#94a3b8">  · sketch_front / sketch_rear (180° lock)</text>
+  <text x="414" y="118" font-size="8" fill="#94a3b8">  · combine · alt_view · recolor · video (anti-drift)</text>
+  <text x="414" y="134" font-size="8" fill="#94a3b8">prompts/customer_adm.yaml — Mario's verbatim P2–P6</text>
+  <text x="414" y="150" font-size="7.5" fill="#64748b">also the frontend's saved-template payloads</text>
+
+  <rect x="760" y="54" width="420" height="118" rx="8" fill="#0f172a"/>
+  <rect x="760" y="54" width="420" height="118" rx="8" fill="rgba(136,19,55,0.35)" stroke="#fb7185" stroke-width="1.4"/>
+  <text x="774" y="74" font-size="10" fill="#fb7185" font-weight="bold">Secrets / keys (NEVER persisted)</text>
+  <text x="774" y="90" font-size="8" fill="#94a3b8">on-prem: K8s Secrets (litellm-key, mlis-key, styling-api-key)</text>
+  <text x="774" y="104" font-size="8" fill="#94a3b8">  → injected as env; backend reads env, no files</text>
+  <text x="774" y="116" font-size="8" fill="#94a3b8">external: arrive in the request body only → ContextVar</text>
+  <text x="774" y="130" font-size="8" fill="#94a3b8">  → Authorization: Bearer {key} on the upstream call</text>
+  <text x="774" y="146" font-size="8" fill="#94a3b8">agent: GEMINI_API_KEY in env — presence checked, never printed</text>
+  <text x="774" y="162" font-size="7.5" fill="#64748b">ADM rule: "keys sent with the request, nothing persisted"</text>
+
+  <!-- arrows from inputs into backend -->
+  <line x1="205" y1="172" x2="430" y2="240" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#arr-cyan)"/>
+  <line x1="565" y1="172" x2="640" y2="240" stroke="#94a3b8" stroke-width="1.4" marker-end="url(#arr)"/>
+  <line x1="970" y1="172" x2="850" y2="240" stroke="#fb7185" stroke-width="1.4" marker-end="url(#arr-rose)"/>
+
+  <!-- ============ MIDDLE: the transformation ============ -->
+  <text x="40" y="222" font-size="11" fill="#e2e8f0" font-weight="bold">B · TRANSFORM — inside the backend (in-memory, per request)</text>
+
+  <rect x="380" y="240" width="360" height="120" rx="8" fill="#0f172a"/>
+  <rect x="380" y="240" width="360" height="120" rx="8" fill="rgba(6,78,59,0.4)" stroke="#34d399" stroke-width="1.4"/>
+  <text x="394" y="260" font-size="10" fill="#6ee7b7" font-weight="bold">Backend transforms (no disk for flow steps)</text>
+  <text x="394" y="278" font-size="8" fill="#94a3b8">b64 → PIL Image (_b64_image_to_pil)</text>
+  <text x="394" y="292" font-size="8" fill="#94a3b8">_dims_from_image: cap IMG_MAX_SIDE=768, align to 16</text>
+  <text x="394" y="306" font-size="8" fill="#94a3b8">_fill(): substitute {requirement} into the prompt</text>
+  <text x="394" y="320" font-size="8" fill="#94a3b8">_detect_body_color(): brain vision → anchors recolor</text>
+  <text x="394" y="334" font-size="8" fill="#94a3b8">out: _flow_enc() → normalized data:image/png;base64 URI</text>
+  <text x="394" y="348" font-size="7.5" fill="#64748b">all flow outputs share one (w,h) per call</text>
+
+  <!-- model role boxes -->
+  <rect x="60" y="250" width="300" height="56" rx="6" fill="rgba(76,29,149,0.3)" stroke="#a78bfa" stroke-width="1.3"/>
+  <text x="74" y="268" font-size="9" fill="#c4b5fd" font-weight="bold">brain — vision LLM</text>
+  <text x="74" y="282" font-size="7.5" fill="#94a3b8">IN: data:image/jpeg;base64 + system prompt</text>
+  <text x="74" y="294" font-size="7.5" fill="#94a3b8">OUT: ≤200-token style/color descriptor (text)</text>
+
+  <rect x="60" y="322" width="300" height="56" rx="6" fill="rgba(120,53,15,0.35)" stroke="#fbbf24" stroke-width="1.3"/>
+  <text x="74" y="340" font-size="9" fill="#fcd34d" font-weight="bold">image — Qwen-Edit GGUF (single-ref)</text>
+  <text x="74" y="354" font-size="7.5" fill="#94a3b8">IN: prompt + ONE image (multipart /v1/images/edits)</text>
+  <text x="74" y="366" font-size="7.5" fill="#94a3b8">OUT: b64_json PNG (2nd image silently discarded)</text>
+
+  <rect x="760" y="250" width="300" height="56" rx="6" fill="rgba(120,53,15,0.4)" stroke="#fbbf24" stroke-width="1.3"/>
+  <text x="774" y="268" font-size="9" fill="#fcd34d" font-weight="bold">i2v — Wan2.2 (async job)</text>
+  <text x="774" y="282" font-size="7.5" fill="#94a3b8">IN: prompt + image → job_id (POST /v1/videos)</text>
+  <text x="774" y="294" font-size="7.5" fill="#94a3b8">OUT: MP4 bytes (GET /content), ≤121 frames, 480–720p</text>
+
+  <line x1="360" y1="278" x2="380" y2="278" stroke="#a78bfa" stroke-width="1.4" marker-end="url(#arr-violet)"/>
+  <line x1="360" y1="350" x2="380" y2="350" stroke="#fbbf24" stroke-width="1.4" marker-end="url(#arr-amber)"/>
+  <line x1="740" y1="278" x2="760" y2="278" stroke="#fbbf24" stroke-width="1.4" marker-end="url(#arr-amber)"/>
+
+  <!-- ============ BOTTOM: the output + state ============ -->
+  <text x="40" y="400" font-size="11" fill="#e2e8f0" font-weight="bold">C · OUTPUT &amp; STATE — where results land</text>
+
+  <!-- flow outputs -->
+  <rect x="60" y="416" width="440" height="130" rx="8" fill="#0f172a"/>
+  <rect x="60" y="416" width="440" height="130" rx="8" fill="rgba(8,51,68,0.35)" stroke="#22d3ee" stroke-width="1.4"/>
+  <text x="74" y="436" font-size="10" fill="#22d3ee" font-weight="bold">Flow steps (sketch/combine/view/recolor) → JSON</text>
+  <text x="74" y="454" font-size="8" fill="#94a3b8">results: { front, rear } / { composed } / { view } / { recolor }</text>
+  <text x="74" y="468" font-size="8" fill="#7dd3fc">each a data:image/png;base64 URI (inline, no disk)</text>
+  <text x="74" y="482" font-size="8" fill="#94a3b8">+ mode, prompt used, size, elapsed_ms, base_color</text>
+  <text x="74" y="498" font-size="8" fill="#94a3b8">→ SPA renders tiles · agent writes PNG artifacts +</text>
+  <text x="86" y="512" font-size="8" fill="#7dd3fc">run_summary.json (rendered prompts, engine_differences)</text>
+  <text x="74" y="528" font-size="7.5" fill="#64748b">flow is STATELESS — the client owns the intermediate images</text>
+
+  <!-- video output -->
+  <rect x="540" y="416" width="330" height="130" rx="8" fill="#0f172a"/>
+  <rect x="540" y="416" width="330" height="130" rx="8" fill="rgba(120,53,15,0.35)" stroke="#fbbf24" stroke-width="1.4"/>
+  <text x="554" y="436" font-size="10" fill="#fcd34d" font-weight="bold">Video step → NFS (the durable output)</text>
+  <text x="554" y="454" font-size="8" fill="#94a3b8">mp4 bytes → _faststart_mp4() (moov atom to front)</text>
+  <text x="554" y="468" font-size="8" fill="#7dd3fc">written to RESULTS_DIR/{job_id}.mp4</text>
+  <text x="554" y="482" font-size="8" fill="#94a3b8">returned as /api/results/{job_id}.mp4</text>
+  <text x="554" y="498" font-size="8" fill="#94a3b8">served inline (Content-Disposition: inline, v39)</text>
+  <text x="554" y="514" font-size="7.5" fill="#64748b">gate: &gt;1MB + ftyp + avcC (avc1/H.264) before success</text>
+
+  <!-- templates -->
+  <rect x="910" y="416" width="270" height="130" rx="8" fill="#0f172a"/>
+  <rect x="910" y="416" width="270" height="130" rx="8" fill="rgba(76,29,149,0.4)" stroke="#a78bfa" stroke-width="1.4"/>
+  <text x="924" y="436" font-size="10" fill="#c4b5fd" font-weight="bold">Templates (user state)</text>
+  <text x="924" y="454" font-size="8" fill="#94a3b8">GET/POST/PUT/DELETE /api/templates</text>
+  <text x="924" y="468" font-size="8" fill="#7dd3fc">JSON on the NFS results PVC</text>
+  <text x="924" y="484" font-size="8" fill="#94a3b8">a saved workflow run:</text>
+  <text x="924" y="498" font-size="8" fill="#94a3b8">prompts, params, refs — one-click re-run</text>
+  <text x="924" y="516" font-size="7.5" fill="#64748b">team-shareable style assets</text>
+
+  <!-- NFS band -->
+  <rect x="60" y="570" width="1120" height="86" rx="8" fill="#0f172a"/>
+  <rect x="60" y="570" width="1120" height="86" rx="8" fill="rgba(76,29,149,0.3)" stroke="#a78bfa" stroke-width="1.5"/>
+  <text x="74" y="590" font-size="10" fill="#c4b5fd" font-weight="bold">NFS PVCs (durable state — survives restarts)</text>
+  <text x="74" y="608" font-size="8.5" fill="#94a3b8">ns/styling-demo · results PVC → *.mp4 · templates JSON · baseline.json (perf history)</text>
+  <text x="74" y="622" font-size="8.5" fill="#94a3b8">ns/project-user-aieadmin · pcai-wan-store → model weights (Wan2.2 34.2GB, pvc:// mount) · agent-state PVC → OpenClaw skills</text>
+  <text x="74" y="640" font-size="7.5" fill="#7c6bb0">weights on shared store = a model re-pins to any node with no re-seed (~15–20min NFS load)</text>
+
+  <line x1="560" y1="546" x2="560" y2="570" stroke="#fbbf24" stroke-width="1.5" marker-end="url(#arr-amber)"/>
+  <line x1="1045" y1="546" x2="1045" y2="570" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arr-violet)"/>
+  <line x1="280" y1="360" x2="280" y2="416" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#arr-cyan)"/>
+  <text x="292" y="392" font-size="7.5" fill="#7dd3fc">flow JSON</text>
+
+  <!-- ============ DATA SIZE / FORMAT TABLE ROW ============ -->
+  <text x="40" y="686" font-size="11" fill="#e2e8f0" font-weight="bold">D · data forms &amp; sizes (what actually crosses each boundary)</text>
+  <rect x="40" y="698" width="1140" height="116" rx="8" fill="#0f172a" stroke="#1e293b" stroke-width="1"/>
+
+  <rect x="56" y="712" width="560" height="90" rx="6" fill="rgba(8,51,68,0.3)" stroke="#22d3ee" stroke-width="1"/>
+  <text x="70" y="730" font-size="8.5" fill="#7dd3fc" font-weight="bold">Images</text>
+  <text x="70" y="744" font-size="8" fill="#94a3b8">in: data:image/png;base64 (~1–3MB as b64) · cap MAX_IMAGES_MB=15</text>
+  <text x="70" y="758" font-size="8" fill="#94a3b8">model: JPEG (brain) / multipart PNG (image) · normalized to ≤768px, /16</text>
+  <text x="70" y="772" font-size="8" fill="#94a3b8">out: PNG data-URI, one shared (w,h) per call · decoded to PIL in-memory</text>
+  <text x="70" y="788" font-size="7.5" fill="#64748b">frontend must NOT send width/height → the backend derives dims (422 otherwise)</text>
+
+  <rect x="632" y="712" width="532" height="90" rx="6" fill="rgba(120,53,15,0.35)" stroke="#fbbf24" stroke-width="1"/>
+  <text x="646" y="730" font-size="8.5" fill="#fcd34d" font-weight="bold">Video &amp; keys</text>
+  <text x="646" y="744" font-size="8" fill="#94a3b8">video: MP4 H.264 (avc1), moov-first, ~1–3MB for 3s 480p · on NFS, URL-served</text>
+  <text x="646" y="758" font-size="8" fill="#94a3b8">job: JSON job_id polled every 2–15s (≤1800s cap) · gen_ms + gpu_util returned</text>
+  <text x="646" y="772" font-size="8" fill="#94a3b8">keys: only in HTTP Authorization header or request body — never written</text>
+  <text x="646" y="788" font-size="7.5" fill="#64748b">weights: 34.2GB via pvc:// — never in git, never in a request</text>
+
+  <!-- ============ LEGEND ============ -->
+  <rect x="40" y="830" width="1140" height="70" rx="6" fill="#0f172a" stroke="#1e293b" stroke-width="1"/>
+  <text x="54" y="850" font-size="8.5" fill="#94a3b8" font-weight="bold">Key invariants</text>
+  <text x="54" y="866" font-size="8" fill="#64748b">· flow steps are STATELESS (client owns intermediates) · the ONLY durable writes are MP4 + templates + baseline on the results PVC</text>
+  <text x="54" y="880" font-size="8" fill="#64748b">· keys never touch disk · weights live on NFS, not in requests · every model step declares its mode (model vs fallback) so data provenance is auditable</text>
+  <text x="54" y="894" font-size="8" fill="#64748b">· the same data contract serves BOTH clients (browser SPA and OpenClaw agent) — the API is the product, the UI is one consumer</text>
+</svg>
+</div>
+
+<div class="cards">
+  <div class="card">
+    <div class="card-header"><div class="card-dot cyan"></div><h3>In-memory vs durable</h3></div>
+    <ul>
+      <li>• Flow images: base64 ↔ PIL, per request, <strong>never written to disk</strong></li>
+      <li>• Durable writes: MP4, templates JSON, baseline.json → results PVC</li>
+      <li>• Weights on the shared pcai-wan-store PVC (not per-request data)</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-dot amber"></div><h3>Transform points</h3></div>
+    <ul>
+      <li>• <code>_dims_from_image</code> — the single normalization every image passes through (768/16)</li>
+      <li>• <code>_flow_enc</code> — one shared output size per call, back to PNG data-URI</li>
+      <li>• <code>_faststart_mp4</code> — pure-stdlib moov re-atomize (browsers need it)</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-dot violet"></div><h3>Security of data</h3></div>
+    <ul>
+      <li>• External keys: request body → ContextVar → Bearer header only</li>
+      <li>• On-prem keys: K8s Secret → env var → header (no files, no logs of values)</li>
+      <li>• Design IP stays in-cluster on the on-prem path — no egress</li>
+    </ul>
+  </div>
+</div>
+
+<div class="footer">PCAI Styling Demo · data flow · verified against backend/main.py (v45) · 2026-10-10</div>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PCAI Styling Demo — Production Path</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#020617; color:#e2e8f0; font-family:'JetBrains Mono','Fira Code',Consolas,monospace; padding:32px; }
+  .header { display:flex; align-items:center; gap:12px; margin-bottom:6px; }
+  .pulse { width:10px; height:10px; border-radius:50%; background:#a78bfa; animation:pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+  h1 { font-size:18px; font-weight:600; letter-spacing:.5px; }
+  .sub { font-size:11px; color:#64748b; margin-bottom:20px; }
+  .card-frame { border:1px solid #1e293b; border-radius:12px; padding:12px; background:#0f172a; }
+  svg { display:block; width:100%; height:auto; }
+  .cards { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:18px; }
+  .card { border:1px solid #1e293b; border-radius:10px; background:#0f172a; padding:14px 16px; }
+  .card-header { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+  .card-dot { width:8px; height:8px; border-radius:50%; }
+  .card-dot.cyan{background:#22d3ee} .card-dot.amber{background:#fbbf24} .card-dot.violet{background:#a78bfa}
+  .card h3 { font-size:12px; font-weight:600; }
+  .card ul { list-style:none; }
+  .card li { font-size:10px; color:#94a3b8; line-height:1.7; }
+  .footer { margin-top:16px; font-size:9px; color:#475569; text-align:center; }
+  text { font-family:'JetBrains Mono','Fira Code',Consolas,monospace; }
+</style>
+</head>
+<body>
+<div class="header"><div class="pulse"></div><h1>PCAI Styling Demo — Production Path</h1></div>
+<div class="sub">From validated PoC (v45/v23) to production-grade service · 4 phases · current demo deliberately keeps deterministic fallbacks + scale-to-0 for responsiveness</div>
+
+<div class="card-frame">
+<svg viewBox="0 0 1200 760" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.5"/>
+    </pattern>
+    <marker id="arr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#64748b"/>
+    </marker>
+    <marker id="arr-violet" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#a78bfa"/>
+    </marker>
+  </defs>
+  <rect width="1200" height="760" fill="#020617"/>
+  <rect width="1200" height="760" fill="url(#grid)"/>
+
+  <!-- main spine -->
+  <line x1="80" y1="120" x2="80" y2="640" stroke="#334155" stroke-width="2"/>
+
+  <!-- ============ TODAY (baseline) ============ -->
+  <circle cx="80" cy="120" r="10" fill="#020617" stroke="#22d3ee" stroke-width="2.5"/>
+  <circle cx="80" cy="120" r="4" fill="#22d3ee"/>
+  <rect x="110" y="76" width="1050" height="92" rx="8" fill="#0f172a"/>
+  <rect x="110" y="76" width="1050" height="92" rx="8" fill="rgba(8,51,68,0.35)" stroke="#22d3ee" stroke-width="1.5"/>
+  <text x="130" y="100" font-size="12" fill="#22d3ee" font-weight="bold">TODAY — validated PoC (what ships in the demo, v45/v23)</text>
+  <text x="130" y="118" font-size="9" fill="#e2e8f0">✓ 6-step IDD pipeline live on CS1 · per-role providers (on-prem/external) · templates · provider tab · OpenClaw agent skill · E2E UI tests · prompt packs (tuned + customer verbatim)</text>
+  <text x="130" y="134" font-size="9" fill="#94a3b8">✓ deterministic fallbacks everywhere (demo never hard-fails) · scale-to-0 predictors (demo cost efficiency) · single backend replica · no auth on /api/* · results on NFS</text>
+  <text x="130" y="150" font-size="8" fill="#64748b">known gaps by design: no multi-user state, no queue, sync step calls up to 900s, no audit/retention, single-A100 video throughput, model re-pinning is manual</text>
+
+  <!-- ============ PHASE 1: service hardening ============ -->
+  <circle cx="80" cy="260" r="10" fill="#020617" stroke="#a78bfa" stroke-width="2.5"/>
+  <circle cx="80" cy="260" r="4" fill="#a78bfa"/>
+  <text x="104" y="248" font-size="9" fill="#a78bfa">≈ 2–3 weeks</text>
+  <rect x="110" y="196" width="1050" height="128" rx="8" fill="#0f172a"/>
+  <rect x="110" y="196" width="1050" height="128" rx="8" fill="rgba(76,29,149,0.25)" stroke="#a78bfa" stroke-width="1.5"/>
+  <text x="130" y="220" font-size="12" fill="#a78bfa" font-weight="bold">PHASE 1 — Service Hardening (make the PoC a real service)</text>
+  <text x="130" y="240" font-size="9" fill="#e2e8f0">• AuthN/Z: Istio JWT / OIDC on the domain; per-user API keys; RBAC per template · /api/* currently unauthenticated (lab-only risk)</text>
+  <text x="130" y="256" font-size="9" fill="#e2e8f0">• Async job model: flow steps become a job queue (Redis/RabbitMQ or K8s Jobs) → GET job status; kills the 900s sync HTTP ceiling; enables progress + cancel + retry</text>
+  <text x="130" y="272" font-size="9" fill="#e2e8f0">• Multi-replica backend (stateless — move job state to PVC/Redis) + HPA · predictor minReplicas:1 (or warm pool) to kill multi-minute cold starts</text>
+  <text x="130" y="288" font-size="9" fill="#e2e8f0">• Observability: structured JSON logs + trace IDs across the 6 steps · Prometheus scrape wired into Ezmeral monitoring · SLOs (p95 per step, GPU saturation)</text>
+  <text x="130" y="304" font-size="9" fill="#e2e8f0">• Quality gates automated: the skill's 4 gates (rear-view / composite / video-fftp+avcC / exit-2) run as CI checks on every run artifact</text>
+  <text x="130" y="318" font-size="8" fill="#7c6bb0">why first: everything else (throughput, models, AI features) multiplies the value of a service that is secure, observable and cancellable</text>
+
+  <!-- ============ PHASE 2: scale & throughput ============ -->
+  <circle cx="80" cy="420" r="10" fill="#020617" stroke="#a78bfa" stroke-width="2.5"/>
+  <circle cx="80" cy="420" r="4" fill="#a78bfa"/>
+  <text x="104" y="408" font-size="9" fill="#a78bfa">≈ 4–6 weeks</text>
+  <rect x="110" y="356" width="1050" height="128" rx="8" fill="#0f172a"/>
+  <rect x="110" y="356" width="1050" height="128" rx="8" fill="rgba(76,29,149,0.25)" stroke="#a78bfa" stroke-width="1.5"/>
+  <text x="130" y="380" font-size="12" fill="#a78bfa" font-weight="bold">PHASE 2 — Scale &amp; Throughput (GPU economics for a real team)</text>
+  <text x="130" y="400" font-size="9" fill="#e2e8f0">• Video capacity: N concurrent I2V jobs ≈ N GPUs (vLLM-Omni queue). Production sizing: 1 A100 per concurrent stylist; batch queue with fair-share</text>
+  <text x="130" y="416" font-size="9" fill="#e2e8f0">• Model fleet manager: automate the node_selectors Postgres re-pinning (today manual) → API: move/re-pin model, watch NFS load, force-delete zombie pods</text>
+  <text x="130" y="432" font-size="9" fill="#e2e8f0">• 80GB-class upgrade path: HunyuanVideo 1.5 (480p) or Wan2.2-14B — one values.yaml change (documented in DESIGN.md §6); 720p via FP8+VAE tiling</text>
+  <text x="130" y="448" font-size="9" fill="#e2e8f0">• Multi-platform: the chart is already platform-adaptive (values.yaml = domain/ns/registry/endpoints) → deploy to any PCAI/Ezmeral cluster with a values.platform-*.yaml</text>
+  <text x="130" y="464" font-size="9" fill="#e2e8f0">• Cost control: GPU metering per user/project (MLIS usage), off-peak scheduling, scale-to-0 with wake-up SLO</text>
+  <text x="130" y="478" font-size="8" fill="#7c6bb0">why: ADM sizing conversation — "1 GPU ≈ 1 concurrent stylist" is the production scaling story; the 40GB constraint is the driver for the 80GB ask</text>
+
+  <!-- ============ PHASE 3: production-grade AI ============ -->
+  <circle cx="80" cy="580" r="10" fill="#020617" stroke="#a78bfa" stroke-width="2.5"/>
+  <circle cx="80" cy="580" r="4" fill="#a78bfa"/>
+  <text x="104" y="568" font-size="9" fill="#a78bfa">≈ 8–12 weeks</text>
+  <rect x="110" y="516" width="1050" height="128" rx="8" fill="#0f172a"/>
+  <rect x="110" y="516" width="1050" height="128" rx="8" fill="rgba(76,29,149,0.25)" stroke="#a78bfa" stroke-width="1.5"/>
+  <text x="130" y="540" font-size="12" fill="#a78bfa" font-weight="bold">PHASE 3 — Production-Grade AI (from demo approximations to production fidelity)</text>
+  <text x="130" y="560" font-size="9" fill="#e2e8f0">• True multi-view consistency: replace prompt-driven re-angles with a multi-view / 3D-consistent model (front↔rear, 4/8 views) — fixes the view-drift class of problems structurally</text>
+  <text x="130" y="576" font-size="9" fill="#e2e8f0">• Object preservation: ControlNet (lineart/canny) on the design step so the designer's lines survive generation — the "do not improvize" guarantee, enforced by model not prompt</text>
+  <text x="130" y="592" font-size="9" fill="#e2e8f0">• Hunyuan3D-2.1 as an ADDITIVE "3D preview" stage (photo → GLB → orbit viewer) — separate from video (decision 2026-10-09); Blender turntable MP4 as an alternative video mode</text>
+  <text x="130" y="608" font-size="9" fill="#e2e8f0">• Prompt-prompt engineering as data: version the prompt packs (tuned/customer_adm) like code — A/B against the 4 quality gates, per-model prompt banks (Qwen-Edit vs Nano Banana differ)</text>
+  <text x="130" y="624" font-size="9" fill="#e2e8f0">• Agent orchestration upgrade: OpenClaw skill → supervised multi-agent (design critic loop, auto-retry with regenerated seed when a gate fails, human-in-the-loop approve)</text>
+  <text x="130" y="638" font-size="8" fill="#7c6bb0">why last: model swaps change nothing about the API contract — the /api/flow + per-role provider design means each upgrade is a values.yaml change, not a rewrite</text>
+
+  <!-- ============ PRODUCTION (end state) ============ -->
+  <circle cx="80" cy="700" r="10" fill="#a78bfa" stroke="#a78bfa" stroke-width="2.5"/>
+  <rect x="110" y="664" width="1050" height="72" rx="8" fill="#0f172a"/>
+  <rect x="110" y="664" width="1050" height="72" rx="8" fill="rgba(120,53,15,0.25)" stroke="#fbbf24" stroke-width="1.5"/>
+  <text x="130" y="688" font-size="12" fill="#fbbf24" font-weight="bold">END STATE — production-grade PCAI Styling Service</text>
+  <text x="130" y="706" font-size="9" fill="#e2e8f0">multi-tenant, authenticated, async, observable · N-GPU throughput with fleet manager · multi-view fidelity · prompt-packs as versioned data · agent-in-the-loop</text>
+  <text x="130" y="720" font-size="9" fill="#94a3b8">same 6-step contract, same API, same chart — production is a values.yaml + phase of the same codebase, not a re-architecture</text>
+</svg>
+</div>
+
+<div class="cards">
+  <div class="card">
+    <div class="card-header"><div class="card-dot cyan"></div><h3>Why this order</h3></div>
+    <ul>
+      <li>• Harden → scale → fidelity: each phase multiplies the last</li>
+      <li>• The per-role provider design (v43+) is what keeps model upgrades cheap</li>
+      <li>• Every phase ships on the existing Helm chart — no re-architecture</li>
+      <li>• Demo fallbacks (Phase 0) become SLO-backed behavior (Phase 1)</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-dot amber"></div><h3>Decisions needed (ADM)</h3></div>
+    <ul>
+      <li>• GPU budget: concurrent-stylist target (N GPUs) → 80GB ask</li>
+      <li>• Multi-view fidelity: accept approximation vs fund the model</li>
+      <li>• Auth model: AD/OIDC integration for the styling team</li>
+      <li>• Template ownership: per-stylist vs shared library + RBAC</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-dot violet"></div><h3>Already production-safe</h3></div>
+    <ul>
+      <li>• Zero hardcoded URLs — fully platform-adaptive (values.yaml)</li>
+      <li>• Secrets in K8s only; external keys request-scoped (never stored)</li>
+      <li>• Durable state on NFS (results, templates, weights)</li>
+      <li>• Deterministic fallbacks with declared <code>mode</code> = honest degradation</li>
+    </ul>
+  </div>
+</div>
+
+<div class="footer">PCAI Styling Demo · production path · HPE Private Cloud AI · Astra Daihatsu Motor · 2026-10-09</div>
+</body>
+</html>

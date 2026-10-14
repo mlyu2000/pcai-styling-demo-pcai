@@ -1,0 +1,11 @@
+apiVersion: v2
+name: pcai-styling
+description: >-
+  PCAI Styling Demo workload (Astra Daihatsu Motor / HPE Private Cloud AI).
+  Renders the backend API, frontend UI, and Istio VirtualService. Inference
+  models (I2V + image-gen) are deployed as MLIS InferenceServices whose
+  endpoints are configured in values.yaml, making the chart portable across
+  any PCAI platform/domain.
+type: application
+version: 1.0.0
+appVersion: "2.0.0"

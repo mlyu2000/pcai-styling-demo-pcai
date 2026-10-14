@@ -1,0 +1,25 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: {{ include "pcai.styling.name" . }}
+  namespace: {{ .Values.platform.namespace }}
+  labels:
+    {{- include "pcai.styling.labels" . | nindent 4 }}
+spec:
+  hosts:
+    - {{ .Values.platform.domain }}
+  gateways:
+    - {{ .Values.platform.gateway }}
+  http:
+    - name: api
+      match:
+        - uri: { prefix: /api }
+      route:
+        - destination:
+            host: {{ include "pcai.styling.backend" . }}
+            port: { number: 80 }
+    - name: ui
+      route:
+        - destination:
+            host: {{ include "pcai.styling.frontend" . }}
+            port: { number: 80 }

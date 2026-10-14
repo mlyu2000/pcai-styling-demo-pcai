@@ -1,0 +1,118 @@
+# PCAI Styling Demo — backend API Deployment + Service.
+# (registry pull secret "regcred" is managed by scripts/deploy-secrets.sh)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: styling-backend
+  namespace: styling-demo
+  labels:
+    app: styling-backend
+    app.kubernetes.io/part-of: pcai-styling-demo
+    app.kubernetes.io/component: backend
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: styling-backend
+  template:
+    metadata:
+      labels:
+        app: styling-backend
+        app.kubernetes.io/part-of: pcai-styling-demo
+        app.kubernetes.io/component: backend
+    spec:
+      containers:
+        - name: api
+          image: registry.ctc.sg.lab:5000/pcai-styling-backend:v5
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8000
+          env:
+            # vLLM-Omni (MLIS) I2V endpoint — MLIS-managed predictor in project-user-aieadmin.
+            # The Knative `pcai-i2v-predictor` ExternalName service fronts the local gateway,
+            # which routes to the active predictor revision (port 80 -> container :8080).
+            - name: MLIS_VIDEO_GENERATION_URL
+              value: http://pcai-i2v-predictor.project-user-aieadmin.svc.cluster.local:80
+            - name: MLIS_MODEL
+              value: /models/wan22-ti2v-5b
+            # MLIS (Aioli) API token — the predictor endpoint requires auth
+            # (security.authenticationRequired=true)
+            - name: MLIS_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: mlis-key
+                  key: key
+            # prompt agent LLM (LiteLLM)
+            - name: LLM_BASE_URL
+              value: http://litellm-helm.project-user-aieadmin.svc.cluster.local:4000
+            - name: LLM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: litellm-key
+                  key: key
+            - name: LLM_MODEL
+              value: qwen3-8-27b-int4-dflash2-r2
+            # results storage
+            - name: RESULTS_DIR
+              value: /results
+            - name: STYLING_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: styling-api-key
+                  key: key
+                  optional: true
+          resources:
+            requests:
+              cpu: "250m"
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            failureThreshold: 3
+          volumeMounts:
+            - name: results
+              mountPath: /results
+      volumes:
+        - name: results
+          emptyDir:
+            sizeLimit: 8Gi
+      imagePullSecrets:
+        - name: regcred
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: styling-backend
+  namespace: styling-demo
+  labels:
+    app: styling-backend
+    app.kubernetes.io/part-of: pcai-styling-demo
+spec:
+  selector:
+    app: styling-backend
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8000

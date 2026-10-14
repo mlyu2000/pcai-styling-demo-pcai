@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PCAI Styling Demo — Process Flow (sequence of calls)</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#020617; color:#e2e8f0; font-family:'JetBrains Mono','Fira Code',Consolas,monospace; padding:32px; }
+  .header { display:flex; align-items:center; gap:12px; margin-bottom:6px; }
+  .pulse { width:10px; height:10px; border-radius:50%; background:#34d399; animation:pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+  h1 { font-size:18px; font-weight:600; letter-spacing:.5px; }
+  .sub { font-size:11px; color:#64748b; margin-bottom:20px; }
+  .card-frame { border:1px solid #1e293b; border-radius:12px; padding:12px; background:#0f172a; }
+  svg { display:block; width:100%; height:auto; }
+  .cards { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:18px; }
+  .card { border:1px solid #1e293b; border-radius:10px; background:#0f172a; padding:14px 16px; }
+  .card-header { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+  .card-dot { width:8px; height:8px; border-radius:50%; }
+  .card-dot.cyan{background:#22d3ee} .card-dot.amber{background:#fbbf24} .card-dot.violet{background:#a78bfa}
+  .card h3 { font-size:12px; font-weight:600; }
+  .card ul { list-style:none; }
+  .card li { font-size:10px; color:#94a3b8; line-height:1.7; }
+  .footer { margin-top:16px; font-size:9px; color:#475569; text-align:center; }
+  text { font-family:'JetBrains Mono','Fira Code',Consolas,monospace; }
+</style>
+</head>
+<body>
+<div class="header"><div class="pulse"></div><h1>PCAI Styling Demo — Process Flow</h1></div>
+<div class="sub">who calls whom, in what order · the 6-step IDD flow on PCAI (on-prem) · request-scoped per-role provider routing · every model call has a declared fallback</div>
+
+<div class="card-frame">
+<svg viewBox="0 0 1220 980" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.5"/>
+    </pattern>
+    <marker id="arr" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 z" fill="#64748b"/>
+    </marker>
+    <marker id="arr-cyan" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 z" fill="#22d3ee"/>
+    </marker>
+    <marker id="arr-em" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 z" fill="#34d399"/>
+    </marker>
+    <marker id="arr-amber" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 z" fill="#fbbf24"/>
+    </marker>
+    <marker id="arr-violet" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 z" fill="#a78bfa"/>
+    </marker>
+    <marker id="arr-rose" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 z" fill="#fb7185"/>
+    </marker>
+  </defs>
+  <rect width="1220" height="980" fill="#020617"/>
+  <rect width="1220" height="980" fill="url(#grid)"/>
+
+  <!-- ===================== LIFELINES (actors) ===================== -->
+  <!-- 7 lifelines: Browser(SPA), OpenClaw agent, Istio, FastAPI backend, provider router, MLIS predictors, NFS/Deterministic -->
+  <text x="60" y="44" font-size="12" fill="#e2e8f0" font-weight="bold">Lifelines</text>
+
+  <!-- lifeline x positions -->
+  <!-- B=100  OC=230  IST=360  BE=560  PR=760  MLIS=960  DET=1150 -->
+  <g stroke="#334155" stroke-width="1" stroke-dasharray="4,4">
+    <line x1="100" y1="70" x2="100" y2="930"/>
+    <line x1="230" y1="70" x2="230" y2="930"/>
+    <line x1="360" y1="70" x2="360" y2="930"/>
+    <line x1="560" y1="70" x2="560" y2="930"/>
+    <line x1="760" y1="70" x2="760" y2="930"/>
+    <line x1="960" y1="70" x2="960" y2="930"/>
+    <line x1="1150" y1="70" x2="1150" y2="930"/>
+  </g>
+
+  <!-- actor headers -->
+  <rect x="44" y="56" width="112" height="42" rx="6" fill="#0f172a"/>
+  <rect x="44" y="56" width="112" height="42" rx="6" fill="rgba(8,51,68,0.5)" stroke="#22d3ee" stroke-width="1.3"/>
+  <text x="100" y="74" font-size="10" fill="#22d3ee" font-weight="bold" text-anchor="middle">Browser SPA</text>
+  <text x="100" y="88" font-size="7.5" fill="#7dd3fc" text-anchor="middle">index.html (v23)</text>
+
+  <rect x="174" y="56" width="112" height="42" rx="6" fill="#0f172a"/>
+  <rect x="174" y="56" width="112" height="42" rx="6" fill="rgba(30,41,59,0.6)" stroke="#94a3b8" stroke-width="1.3"/>
+  <text x="230" y="74" font-size="10" fill="#cbd5e1" font-weight="bold" text-anchor="middle">OpenClaw agent</text>
+  <text x="230" y="88" font-size="7.5" fill="#94a3b8" text-anchor="middle">run_pipeline.py</text>
+
+  <rect x="304" y="56" width="112" height="42" rx="6" fill="#0f172a"/>
+  <rect x="304" y="56" width="112" height="42" rx="6" fill="rgba(120,53,15,0.4)" stroke="#fbbf24" stroke-width="1.3"/>
+  <text x="360" y="74" font-size="10" fill="#fcd34d" font-weight="bold" text-anchor="middle">Istio</text>
+  <text x="360" y="88" font-size="7.5" fill="#92782c" text-anchor="middle">ezaf-gateway VS</text>
+
+  <rect x="504" y="56" width="112" height="42" rx="6" fill="#0f172a"/>
+  <rect x="504" y="56" width="112" height="42" rx="6" fill="rgba(6,78,59,0.5)" stroke="#34d399" stroke-width="1.3"/>
+  <text x="560" y="74" font-size="10" fill="#6ee7b7" font-weight="bold" text-anchor="middle">FastAPI backend</text>
+  <text x="560" y="88" font-size="7.5" fill="#34d399" text-anchor="middle">v45 · 26 routes</text>
+
+  <rect x="704" y="56" width="112" height="42" rx="6" fill="#0f172a"/>
+  <rect x="704" y="56" width="112" height="42" rx="6" fill="rgba(76,29,149,0.5)" stroke="#a78bfa" stroke-width="1.3"/>
+  <text x="760" y="74" font-size="10" fill="#c4b5fd" font-weight="bold" text-anchor="middle">Provider router</text>
+  <text x="760" y="88" font-size="7.5" fill="#7c6bb0" text-anchor="middle">ContextVar per-role</text>
+
+  <rect x="904" y="56" width="112" height="42" rx="6" fill="#0f172a"/>
+  <rect x="904" y="56" width="112" height="42" rx="6" fill="rgba(120,53,15,0.5)" stroke="#fbbf24" stroke-width="1.3"/>
+  <text x="960" y="74" font-size="10" fill="#fcd34d" font-weight="bold" text-anchor="middle">MLIS predictors</text>
+  <text x="960" y="88" font-size="7.5" fill="#92782c" text-anchor="middle">brain · image · i2v</text>
+
+  <rect x="1094" y="56" width="112" height="42" rx="6" fill="#0f172a"/>
+  <rect x="1094" y="56" width="112" height="42" rx="6" fill="rgba(30,41,59,0.5)" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,3"/>
+  <text x="1150" y="74" font-size="10" fill="#cbd5e1" font-weight="bold" text-anchor="middle">Deterministic</text>
+  <text x="1150" y="88" font-size="7.5" fill="#64748b" text-anchor="middle">fallbacks + NFS</text>
+
+  <!-- ===================== 1. INITIATION ===================== -->
+  <text x="30" y="126" font-size="9.5" fill="#94a3b8" font-weight="bold">1 · initiate — browser (Quick Video) OR agent (6-step IDD)</text>
+  <line x1="100" y1="134" x2="360" y2="134" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#arr-cyan)"/>
+  <text x="228" y="129" font-size="7.5" fill="#7dd3fc" text-anchor="middle">POST /api/flow/*  (photo + prompt, base64)</text>
+  <line x1="230" y1="146" x2="360" y2="146" stroke="#94a3b8" stroke-width="1.4" marker-end="url(#arr)"/>
+  <text x="294" y="141" font-size="7" fill="#94a3b8" text-anchor="middle">agent: same POST</text>
+  <line x1="360" y1="158" x2="560" y2="158" stroke="#fbbf24" stroke-width="1.5" marker-end="url(#arr-amber)"/>
+  <text x="460" y="153" font-size="7.5" fill="#fcd34d" text-anchor="middle">VS rewrites to svc/backend</text>
+
+  <!-- ===================== 2. PROVIDER ROUTING ===================== -->
+  <text x="30" y="188" font-size="9.5" fill="#94a3b8" font-weight="bold">2 · route — per-role provider resolves for THIS request (ContextVar)</text>
+  <line x1="560" y1="200" x2="760" y2="200" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arr-violet)"/>
+  <text x="660" y="195" font-size="7.5" fill="#c4b5fd" text-anchor="middle">_apply_provider(req.provider)</text>
+  <rect x="640" y="210" width="240" height="44" rx="5" fill="rgba(76,29,149,0.35)" stroke="#a78bfa" stroke-width="1"/>
+  <text x="652" y="226" font-size="8" fill="#c4b5fd">_brain_endpoint() → LLM_URL+LLM_MODEL</text>
+  <text x="652" y="240" font-size="8" fill="#c4b5fd">_image_endpoint() → IMG_ENDPOINT (is_external gates</text>
+  <text x="652" y="250" font-size="8" fill="#7c6bb0">the sdcpp extra-args embed) · _i2v_endpoint() → MLIS_URL</text>
+  <text x="660" y="266" font-size="7" fill="#7c6bb0">external role → its base_url+key+model; empty role → on-prem</text>
+
+  <!-- ===================== 3. SKETCH ===================== -->
+  <text x="30" y="296" font-size="9.5" fill="#e2e8f0" font-weight="bold">3 · SKETCH — /api/flow/sketch  (front AND rear, each from the photo)</text>
+  <line x1="560" y1="310" x2="1150" y2="310" stroke="#34d399" stroke-width="1.5" marker-end="url(#arr-em)"/>
+  <text x="700" y="305" font-size="7.5" fill="#6ee7b7">_detect_body_color(img) → brain vision (LiteLLM /v1/chat/completions)</text>
+  <line x1="1150" y1="322" x2="560" y2="322" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arr)"/>
+  <text x="850" y="317" font-size="7" fill="#94a3b8" text-anchor="middle">base_color → anchors the rear prompt</text>
+  <line x1="560" y1="336" x2="960" y2="336" stroke="#34d399" stroke-width="1.5" marker-end="url(#arr-em)"/>
+  <text x="700" y="331" font-size="7.5" fill="#6ee7b7">_img_generate(front @0.8) then _img_generate(rear @ROT_STRENGTH)</text>
+  <text x="760" y="348" font-size="7" fill="#92782c">image model = Qwen-Edit GGUF · POST /v1/images/edits · IMG_MAX_SIDE=768</text>
+  <line x1="960" y1="360" x2="560" y2="360" stroke="#34d399" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arr-em)"/>
+  <text x="700" y="355" font-size="7" fill="#6ee7b7">results.front + results.rear (data-URIs) · mode per view</text>
+  <line x1="560" y1="374" x2="1150" y2="374" stroke="#fb7185" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arr-rose)"/>
+  <text x="855" y="369" font-size="7" fill="#fda4af" text-anchor="middle">fallback: pencil-fallback (deterministic line-art)</text>
+
+  <!-- ===================== 4. COMBINE ===================== -->
+  <text x="30" y="404" font-size="9.5" fill="#e2e8f0" font-weight="bold">4 · COMBINE — /api/flow/combine  (design into scene · PRIMARY = scene-gen)</text>
+  <rect x="770" y="414" width="380" height="40" rx="5" fill="rgba(120,53,15,0.35)" stroke="#fbbf24" stroke-width="1"/>
+  <text x="782" y="428" font-size="8" fill="#fcd34d">mode=scene-gen → _img_generate(scene-gen prompt, design, @0.85)</text>
+  <text x="782" y="442" font-size="7.5" fill="#92782c">single-reference model → car photo is the ONLY ref (2nd image discarded)</text>
+  <line x1="560" y1="418" x2="770" y2="418" stroke="#34d399" stroke-width="1.5" marker-end="url(#arr-em)"/>
+  <text x="665" y="413" font-size="7" fill="#6ee7b7" text-anchor="middle">single-ref scene-gen</text>
+  <line x1="770" y1="436" x2="960" y2="436" stroke="#34d399" stroke-width="1.4" marker-end="url(#arr-em)"/>
+  <text x="865" y="431" font-size="7" fill="#6ee7b7" text-anchor="middle">/v1/images/edits</text>
+  <line x1="560" y1="462" x2="1150" y2="462" stroke="#fb7185" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arr-rose)"/>
+  <text x="855" y="457" font-size="7" fill="#fda4af" text-anchor="middle">fallback: _compose_scene(design,scene) → composite-fallback (geometry-locked paste)</text>
+
+  <!-- ===================== 5. VIEW / RECOLOR ===================== -->
+  <text x="30" y="492" font-size="9.5" fill="#e2e8f0" font-weight="bold">5 · VIEW / RECOLOR — /api/flow/view &amp; /api/flow/recolor</text>
+  <line x1="560" y1="506" x2="960" y2="506" stroke="#34d399" stroke-width="1.5" marker-end="url(#arr-em)"/>
+  <text x="700" y="501" font-size="7.5" fill="#6ee7b7">view: alt_view_prompt(view) @ALT_VIEW_STRENGTH (explicit per-view)</text>
+  <line x1="560" y1="526" x2="960" y2="526" stroke="#34d399" stroke-width="1.5" marker-end="url(#arr-em)"/>
+  <text x="700" y="521" font-size="7.5" fill="#6ee7b7">recolor: paint-only @0.6 (anchored to detected color)</text>
+  <line x1="560" y1="546" x2="1150" y2="546" stroke="#fb7185" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arr-rose)"/>
+  <text x="855" y="541" font-size="7" fill="#fda4af" text-anchor="middle">fallback: view → input-fallback · recolor → deterministic HSV repaint</text>
+
+  <!-- ===================== 6. VIDEO ===================== -->
+  <text x="30" y="576" font-size="9.5" fill="#e2e8f0" font-weight="bold">6 · VIDEO — /api/flow/video  (final still → MP4 · the slow one)</text>
+  <line x1="560" y1="590" x2="960" y2="590" stroke="#fbbf24" stroke-width="1.6" marker-end="url(#arr-amber)"/>
+  <text x="700" y="585" font-size="7.5" fill="#fcd34d">generate_video(): POST /v1/videos (create job) → _poll_job every 2–15s</text>
+  <text x="700" y="606" font-size="7" fill="#92782c">GET /v1/videos/{id} until status=completed (≤1800s) → GET /v1/videos/{id}/content</text>
+  <line x1="960" y1="618" x2="560" y2="618" stroke="#fbbf24" stroke-width="1.4" stroke-dasharray="5,3" marker-end="url(#arr-amber)"/>
+  <text x="700" y="613" font-size="7" fill="#fcd34d">mp4 bytes → _faststart_mp4() (move moov atom front, pure stdlib)</text>
+  <line x1="560" y1="636" x2="1150" y2="636" stroke="#34d399" stroke-width="1.4" marker-end="url(#arr-em)"/>
+  <text x="855" y="631" font-size="7" fill="#6ee7b7" text-anchor="middle">write {job_id}.mp4 → NFS results PVC</text>
+  <line x1="560" y1="652" x2="360" y2="652" stroke="#34d399" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arr-em)"/>
+  <text x="460" y="647" font-size="7" fill="#6ee7b7" text-anchor="middle">video_url /api/results/{job_id}.mp4</text>
+  <text x="700" y="664" font-size="7" fill="#64748b">video has NO deterministic fallback → the mp4 gate (ftyp+avcC, &gt;1MB) is real</text>
+
+  <!-- ===================== 7. RESPONSE / RETURN ===================== -->
+  <text x="30" y="694" font-size="9.5" fill="#94a3b8" font-weight="bold">7 · return — every step answers with results + prompt + mode + elapsed_ms</text>
+  <line x1="560" y1="708" x2="360" y2="708" stroke="#94a3b8" stroke-width="1.4" stroke-dasharray="6,3" marker-end="url(#arr)"/>
+  <text x="460" y="703" font-size="7.5" fill="#94a3b8" text-anchor="middle">JSON (data-URIs / video_url)</text>
+  <line x1="360" y1="722" x2="230" y2="722" stroke="#94a3b8" stroke-width="1.3" stroke-dasharray="6,3" marker-end="url(#arr)"/>
+  <text x="294" y="717" font-size="7" fill="#94a3b8" text-anchor="middle">agent: run_summary.json</text>
+  <line x1="360" y1="734" x2="100" y2="734" stroke="#22d3ee" stroke-width="1.3" stroke-dasharray="6,3" marker-end="url(#arr-cyan)"/>
+  <text x="230" y="729" font-size="7" fill="#7dd3fc" text-anchor="middle">SPA renders tiles</text>
+
+  <!-- ===================== 8. ASYNC OPS (side notes) ===================== -->
+  <rect x="30" y="756" width="1160" height="150" rx="8" fill="#0f172a" stroke="#1e293b" stroke-width="1"/>
+  <text x="44" y="776" font-size="10" fill="#c4b5fd" font-weight="bold">8 · out-of-band / continuous (not per-request)</text>
+
+  <rect x="46" y="788" width="352" height="104" rx="6" fill="rgba(76,29,149,0.3)" stroke="#a78bfa" stroke-width="1"/>
+  <text x="58" y="806" font-size="8.5" fill="#c4b5fd" font-weight="bold">Provider tab (browser, any time)</text>
+  <text x="58" y="822" font-size="7.5" fill="#94a3b8">GET  /api/providers/test   → probe one role endpoint</text>
+  <text x="58" y="836" font-size="7.5" fill="#94a3b8">GET  /api/providers/models → external model list</text>
+  <text x="58" y="850" font-size="7.5" fill="#94a3b8">GET  /api/providers/onprem-models → live LiteLLM catalog</text>
+  <text x="58" y="864" font-size="7.5" fill="#7c6bb0">keys travel per request only — never persisted (ADM rule)</text>
+  <text x="58" y="880" font-size="7.5" fill="#64748b">/api/flow/* is ALWAYS on-prem (the agent contract)</text>
+
+  <rect x="418" y="788" width="352" height="104" rx="6" fill="rgba(120,53,15,0.3)" stroke="#fbbf24" stroke-width="1"/>
+  <text x="430" y="806" font-size="8.5" fill="#fcd34d" font-weight="bold">MLIS control plane (ops, on-demand)</text>
+  <text x="430" y="822" font-size="7.5" fill="#94a3b8">POST /api/v1/models + /deployments (Aioli)</text>
+  <text x="430" y="836" font-size="7.5" fill="#94a3b8">Node move = Postgres node_selectors UPDATE</text>
+  <text x="430" y="850" font-size="7.5" fill="#94a3b8">+ status=Deploying → ListenLoop new revision</text>
+  <text x="430" y="864" font-size="7.5" fill="#7c6bb0">weights on shared NFS → re-pin, no re-seed</text>
+  <text x="430" y="880" font-size="7.5" fill="#64748b">zombie pod → delete --grace-period=0 --force</text>
+
+  <rect x="790" y="788" width="380" height="104" rx="6" fill="rgba(30,41,59,0.5)" stroke="#94a3b8" stroke-width="1"/>
+  <text x="802" y="806" font-size="8.5" fill="#cbd5e1" font-weight="bold">Deterministic fallbacks (always available)</text>
+  <text x="802" y="822" font-size="7.5" fill="#94a3b8">sketch → pencil line-art · combine → geometry-locked</text>
+  <text x="802" y="836" font-size="7.5" fill="#94a3b8">composite · view → input passthrough · recolor → HSV repaint</text>
+  <text x="802" y="850" font-size="7.5" fill="#94a3b8">scene → bundled mock dusk · design → mock sample</text>
+  <text x="802" y="864" font-size="7.5" fill="#7c6bb0">each declares itself in `mode` — never silent</text>
+  <text x="802" y="880" font-size="7.5" fill="#64748b">agent protocol: exit 2 = fallback used → report which</text>
+
+  <!-- ===================== LEGEND ===================== -->
+  <rect x="30" y="922" width="1160" height="40" rx="6" fill="#0f172a" stroke="#1e293b" stroke-width="1"/>
+  <g font-size="8" fill="#94a3b8">
+    <line x1="48" y1="942" x2="78" y2="942" stroke="#22d3ee" stroke-width="1.5"/><text x="84" y="945">request in</text>
+    <line x1="168" y1="942" x2="198" y2="942" stroke="#a78bfa" stroke-width="1.5"/><text x="204" y="945">provider route</text>
+    <line x1="302" y1="942" x2="332" y2="942" stroke="#34d399" stroke-width="1.5"/><text x="338" y="945">image/model call</text>
+    <line x1="452" y1="942" x2="482" y2="942" stroke="#fbbf24" stroke-width="1.5"/><text x="488" y="945">video job / istio</text>
+    <line x1="618" y1="942" x2="648" y2="942" stroke="#fb7185" stroke-width="1.5" stroke-dasharray="4,3"/><text x="654" y="945">fallback (declared)</text>
+    <line x1="820" y1="942" x2="850" y2="942" stroke="#94a3b8" stroke-width="1.3" stroke-dasharray="5,3"/><text x="856" y="945">return / side note</text>
+    <text x="1010" y="945" fill="#64748b">solid = sync request · dashed = return / out-of-band</text>
+  </g>
+</svg>
+</div>
+
+<div class="cards">
+  <div class="card">
+    <div class="card-header"><div class="card-dot cyan"></div><h3>Two entry points</h3></div>
+    <ul>
+      <li>• Browser SPA → the 6-step <em>Styling Workflow</em> tab (step-by-step, human gate between sketch and combine)</li>
+      <li>• OpenClaw agent → same <code>/api/flow/*</code>, stdlib client, <code>pcai|gemini|both</code>, writes run_summary.json</li>
+      <li>• Both hit the exact same backend contract — the UI is a client of the agent API, not a separate path</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-dot amber"></div><h3>The 3 model roles</h3></div>
+    <ul>
+      <li>• <strong>brain</strong> (vision LLM) → LiteLLM <code>/v1/chat/completions</code> — describes references, detects body color</li>
+      <li>• <strong>image</strong> → <code>/v1/images/edits</code> — the 4 image steps (sketch/combine/view/recolor)</li>
+      <li>• <strong>i2v</strong> → <code>/v1/videos</code> create → poll → <code>/content</code> — the only async, long step</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-dot violet"></div><h3>Routing rule (v43+)</h3></div>
+    <ul>
+      <li>• Per-role ContextVar set once per request; resolvers pick external vs on-prem independently</li>
+      <li>• <code>is_external</code> on the image role gates the sdcpp prompt-embed (external OpenAI servers reject it)</li>
+      <li>• Keys are request-scoped — never written to disk or a secret</li>
+    </ul>
+  </div>
+</div>
+
+<div class="footer">PCAI Styling Demo · process flow · call chains verified against backend/main.py (v45) · 2026-10-10</div>
+</body>
+</html>

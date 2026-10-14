@@ -1,0 +1,44 @@
+# Static PV + PVC in project-user-aieadmin that point at the SAME NFS subdir
+# backing the styling-demo/model-store PVC (where Wan2.2 weights are seeded).
+# NFS allows concurrent mounts of the same export, so MLIS (which can only
+# deploy into project-user-aieadmin) can read the seeded weights with no copy.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pcai-wan-store-pv
+  labels:
+    app: pcai-styling
+spec:
+  capacity:
+    storage: 60Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: nfs-csi
+  volumeMode: Filesystem
+  mountOptions:
+    - nfsvers=4.1
+  csi:
+    driver: nfs.csi.k8s.io
+    volumeAttributes:
+      server: nfs.cs1.ctc.sg.lab
+      share: /
+      subdir: pvc-a91e7515-c3fe-4494-9723-4d9866bf0bc5
+      mountPermissions: "0"
+  # NOTE: no claimRef — let the PVC below bind to it.
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pcai-wan-store
+  namespace: project-user-aieadmin
+  labels:
+    app: pcai-styling
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: nfs-csi
+  resources:
+    requests:
+      storage: 60Gi
+  volumeName: pcai-wan-store-pv

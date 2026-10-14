@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "pcai.styling.frontend" . }}
+  namespace: {{ .Values.platform.namespace }}
+  labels:
+    {{- include "pcai.styling.labels" . | nindent 4 }}
+    app: styling-frontend
+    app.kubernetes.io/component: frontend
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: { maxUnavailable: 0, maxSurge: 1 }
+  selector:
+    matchLabels: { app: styling-frontend }
+  template:
+    metadata:
+      labels:
+        app: styling-frontend
+        {{- include "pcai.styling.labels" . | nindent 8 }}
+    spec:
+      imagePullSecrets:
+        - name: {{ .Values.platform.imagePullSecret }}
+      containers:
+        - name: web
+          image: "{{ .Values.platform.registry }}/pcai-styling-frontend:{{ .Values.images.frontend.tag }}"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 80
+          resources:
+            requests:
+              cpu: {{ .Values.frontend.cpu.request | quote }}
+              memory: {{ .Values.frontend.memory.request | quote }}
+            limits:
+              cpu: {{ .Values.frontend.cpu.limit | quote }}
+              memory: {{ .Values.frontend.memory.limit | quote }}
+          readinessProbe:
+            httpGet: { path: /, port: 80 }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+      # NOTE: no runAsNonRoot here — the nginx master must run as root to bind
+      # :80 and write /var/cache/nginx (workers drop privileges themselves).
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "pcai.styling.frontend" . }}
+  namespace: {{ .Values.platform.namespace }}
+  labels:
+    {{- include "pcai.styling.labels" . | nindent 4 }}
+    app: styling-frontend
+spec:
+  selector: { app: styling-frontend }
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80

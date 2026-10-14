@@ -1,0 +1,26 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: styling-demo
+  namespace: styling-demo
+spec:
+  hosts:
+    - styling-demo.aie.cs1.ctc.sg.lab
+  gateways:
+    - istio-system/ezaf-gateway
+  http:
+    - name: api
+      match:
+        - uri:
+            prefix: /api
+      route:
+        - destination:
+            host: styling-backend
+            port:
+              number: 80
+    - name: ui
+      route:
+        - destination:
+            host: styling-frontend
+            port:
+              number: 80

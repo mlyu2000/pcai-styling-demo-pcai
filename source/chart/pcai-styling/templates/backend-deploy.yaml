@@ -1,0 +1,138 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "pcai.styling.backend" . }}
+  namespace: {{ .Values.platform.namespace }}
+  labels:
+    {{- include "pcai.styling.labels" . | nindent 4 }}
+    app: styling-backend
+    app.kubernetes.io/component: backend
+spec:
+  replicas: {{ .Values.backend.replicas }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: { maxUnavailable: 0, maxSurge: 1 }
+  selector:
+    matchLabels: { app: styling-backend }
+  template:
+    metadata:
+      labels:
+        app: styling-backend
+        {{- include "pcai.styling.labels" . | nindent 8 }}
+    spec:
+      imagePullSecrets:
+        - name: {{ .Values.platform.imagePullSecret }}
+      containers:
+        - name: api
+          image: "{{ .Values.platform.registry }}/pcai-styling-backend:{{ .Values.images.backend.tag }}"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8000
+          env:
+            # I2V (MLIS) - adaptive endpoint (no hardcoded URL in code)
+            - name: MLIS_VIDEO_GENERATION_URL
+              value: {{ .Values.endpoints.mlisI2v.url | quote }}
+            - name: MLIS_MODEL
+              value: {{ .Values.endpoints.mlisI2v.model | quote }}
+            - name: MLIS_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.mlisKey.name }}
+                  key: {{ .Values.secrets.mlisKey.key }}
+            # prompt-agent LLM
+            - name: LLM_BASE_URL
+              value: {{ .Values.endpoints.llm.url | quote }}
+            - name: LLM_MODEL
+              value: {{ .Values.endpoints.llm.model | quote }}
+            - name: LLM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.llmKey.name }}
+                  key: {{ .Values.secrets.llmKey.key }}
+            # optional image model (Qwen-Image-Edit GGUF via sdcpp-server)
+            - name: IMG_ENDPOINT
+              value: {{ .Values.endpoints.imageGen.url | quote }}
+            - name: IMG_MODEL
+              value: {{ .Values.endpoints.imageGen.model | quote }}
+            - name: IMG_SD_CPP_EXTRA
+              value: {{ .Values.endpoints.imageGen.sdCppExtra | default false | quote }}
+            - name: IMG_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.imageGenKey.name }}
+                  key: {{ .Values.secrets.imageGenKey.key }}
+                  optional: true
+            # public domain (informational, for /api/config)
+            - name: DOMAIN
+              value: {{ .Values.platform.domain | quote }}
+            # model capabilities (drives /api/config -> dynamic UI)
+            - name: MODEL_DISPLAY_NAME
+              value: {{ .Values.model.displayName | quote }}
+            - name: MAX_DURATION_SEC
+              value: {{ .Values.model.maxDurationSec | quote }}
+            - name: MIN_DURATION_SEC
+              value: {{ .Values.model.minDurationSec | quote }}
+            - name: MAX_FRAMES
+              value: {{ .Values.model.maxFrames | quote }}
+            - name: MIN_FRAMES
+              value: {{ .Values.model.minFrames | quote }}
+            - name: SUPPORTED_RESOLUTIONS
+              value: {{ join "," .Values.model.resolutions | quote }}
+            - name: DEFAULT_RESOLUTION
+              value: {{ .Values.model.defaultResolution | quote }}
+            # storage + auth
+            - name: RESULTS_DIR
+              value: /results
+            - name: STYLING_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.stylingKey.name }}
+                  key: {{ .Values.secrets.stylingKey.key }}
+                  optional: true
+          resources:
+            requests:
+              cpu: {{ .Values.backend.cpu.request | quote }}
+              memory: {{ .Values.backend.memory.request | quote }}
+            limits:
+              cpu: {{ .Values.backend.cpu.limit | quote }}
+              memory: {{ .Values.backend.memory.limit | quote }}
+          readinessProbe:
+            httpGet: { path: /healthz, port: 8000 }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            httpGet: { path: /healthz, port: 8000 }
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            failureThreshold: 3
+          volumeMounts:
+            - name: results
+              mountPath: /results
+      volumes:
+        - name: results
+          {{- if eq (default "pvc" .Values.storage.results.type) "pvc" }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.storage.results.pvcName }}
+          {{- else }}
+          emptyDir: { sizeLimit: {{ .Values.storage.results.emptyDirSize | quote }} }
+          {{- end }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "pcai.styling.backend" . }}
+  namespace: {{ .Values.platform.namespace }}
+  labels:
+    {{- include "pcai.styling.labels" . | nindent 4 }}
+    app: styling-backend
+spec:
+  selector: { app: styling-backend }
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8000

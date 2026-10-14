@@ -1,0 +1,119 @@
+# PCAI Styling Demo — I2V inference via MLIS (Knative/KServe InferenceService)
+# Serves the I2V model through vLLM-Omni's OpenAI-compatible /v1/videos API.
+#
+# MODEL DECISION (2026-09-24):
+#   PRIMARY (user directive) = HunyuanVideo-1.5, but it needs ~100 GiB at
+#   default settings (80-GiB card minimum with CPU offload + VAE tiling).
+#   CS1 has only A100-PCIE-40GB GPUs -> GPU is constrained -> the user's
+#   fallback applies:
+#   ACTIVE = Wan-AI/Wan2.2-TI2V-5B-Diffusers (dense 5B unified T2V+I2V,
+#   ~20-25 GiB BF16, smallest I2V model in vLLM-Omni).
+#
+# The container runs the official vllm/vllm-omni image with the vllm serve
+# command inlined (same pattern as the platform's qwen3 MLIS InferenceService).
+#
+# MODEL WEIGHTS (important): the cluster's pod network CANNOT reach
+# cdn-lfs.huggingface.co (only huggingface.co metadata resolves), so the model
+# CANNOT be pulled from HF at pod start. Instead the weights are pre-seeded
+# from the build bastion (full HF egress) directly onto the model-store PVC
+# (NFS nfs.cs1.ctc.sg.lab) by scripts/seed-model.sh. The pod serves the LOCAL
+# path /models/wan22-ti2v-5b (mount of the PVC at /models) and never dials HF
+# for weights. Re-seed after a PVC wipe via scripts/seed-model.sh.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: model-store
+  namespace: styling-demo
+  labels:
+    app: styling-inference
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: nfs-csi
+  resources:
+    requests:
+      storage: 60Gi
+---
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: pcai-i2v
+  namespace: styling-demo
+  labels:
+    app: styling-inference
+    hpe-ezua/app: mlis
+    hpe-ezua/component: inference-service
+    inference.hpe.com/modelCategory: other
+  annotations:
+    hpe-ezua/disable-sc: "true"
+    hpe-ezua/mig.sizes: whole
+    inference.hpe.com/api-type: custom
+    serving.knative.dev/progress-deadline: "7200s"
+spec:
+  predictor:
+    minReplicas: 1
+    maxReplicas: 1
+    containers:
+      - name: kserve-container
+        image: vllm/vllm-omni:v0.28.0
+        imagePullPolicy: IfNotPresent
+        command:
+          - sh
+          - -c
+          - >-
+            exec vllm serve /models/wan22-ti2v-5b --omni
+            --host 0.0.0.0 --port 8000
+            --tensor-parallel-size 1
+            --gpu-memory-utilization 0.90
+            --max-num-seqs 1
+            --vae-use-tiling
+            --enforce-eager
+            --trust-remote-code
+        ports:
+          - containerPort: 8000
+        env:
+          - name: HF_HOME
+            value: /models/hf
+          - name: HF_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: hf-token
+                key: token
+          - name: HF_HUB_ENABLE_HF_TRANSFER
+            value: "1"
+          - name: VLLM_OMNI_STORAGE_PATH
+            value: /var/tmp/vllm-omni-videos
+          - name: TOKENIZERS_PARALLELISM
+            value: "false"
+        resources:
+          requests:
+            cpu: "8"
+            memory: 48Gi
+            nvidia.com/gpu: "1"
+          limits:
+            cpu: "16"
+            memory: 80Gi
+            nvidia.com/gpu: "1"
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 15
+          timeoutSeconds: 20
+          failureThreshold: 240
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 120
+          periodSeconds: 30
+          timeoutSeconds: 20
+          failureThreshold: 20
+        volumeMounts:
+          - name: model-store
+            mountPath: /models
+    volumes:
+      - name: model-store
+        persistentVolumeClaim:
+          claimName: model-store

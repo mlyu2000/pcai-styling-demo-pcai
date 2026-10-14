@@ -1,0 +1,6 @@
+apiVersion: v2
+name: pcai-styling
+description: Astra AI Styling / video-generation demo (PCAI). Registers the styling-demo endpoint for the EzApps UI tile; workloads run in styling-demo.
+version: 0.1.0
+appVersion: "0.1.0"
+type: application

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PCAI Styling Demo — IDD Pipeline (6-Step Flow)</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#020617; color:#e2e8f0; font-family:'JetBrains Mono','Fira Code',Consolas,monospace; padding:32px; }
+  .header { display:flex; align-items:center; gap:12px; margin-bottom:6px; }
+  .pulse { width:10px; height:10px; border-radius:50%; background:#22d3ee; animation:pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+  h1 { font-size:18px; font-weight:600; letter-spacing:.5px; }
+  .sub { font-size:11px; color:#64748b; margin-bottom:20px; }
+  .card-frame { border:1px solid #1e293b; border-radius:12px; padding:12px; background:#0f172a; }
+  svg { display:block; width:100%; height:auto; }
+  .cards { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:18px; }
+  .card { border:1px solid #1e293b; border-radius:10px; background:#0f172a; padding:14px 16px; }
+  .card-header { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+  .card-dot { width:8px; height:8px; border-radius:50%; }
+  .card-dot.cyan{background:#22d3ee} .card-dot.emerald{background:#34d399} .card-dot.violet{background:#a78bfa}
+  .card h3 { font-size:12px; font-weight:600; }
+  .card ul { list-style:none; }
+  .card li { font-size:10px; color:#94a3b8; line-height:1.7; }
+  .footer { margin-top:16px; font-size:9px; color:#475569; text-align:center; }
+  text { font-family:'JetBrains Mono','Fira Code',Consolas,monospace; }
+</style>
+</head>
+<body>
+<div class="header"><div class="pulse"></div><h1>PCAI Styling Demo — IDD Pipeline (6-Step Flow)</h1></div>
+<div class="sub">Mario's "Exterior New Design" workflow · P2–P6 semantics · two engines: PCAI on-prem (default) vs Gemini (external) · prompt packs: tuned.yaml / customer_adm.yaml</div>
+
+<div class="card-frame">
+<svg viewBox="0 0 1200 840" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.5"/>
+    </pattern>
+    <marker id="arr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#64748b"/>
+    </marker>
+    <marker id="arr-cyan" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#22d3ee"/>
+    </marker>
+  </defs>
+  <rect width="1200" height="840" fill="#020617"/>
+  <rect width="1200" height="840" fill="url(#grid)"/>
+
+  <!-- ===== arrows ===== -->
+  <line x1="600" y1="150" x2="600" y2="184" stroke="#22d3ee" stroke-width="1.6" marker-end="url(#arr-cyan)"/>
+  <line x1="600" y1="266" x2="600" y2="296" stroke="#64748b" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="600" y1="392" x2="600" y2="422" stroke="#64748b" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="600" y1="518" x2="600" y2="548" stroke="#64748b" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="600" y1="644" x2="600" y2="674" stroke="#64748b" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="600" y1="770" x2="600" y2="798" stroke="#64748b" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- ===== INPUT ===== -->
+  <rect x="400" y="66" width="400" height="84" rx="8" fill="#0f172a"/>
+  <rect x="400" y="66" width="400" height="84" rx="8" fill="rgba(8,51,68,0.4)" stroke="#22d3ee" stroke-width="1.5"/>
+  <text x="600" y="90" font-size="12" fill="#22d3ee" font-weight="bold" text-anchor="middle">INPUT — front-view car photo (Mario's P1 screenshot)</text>
+  <text x="600" y="108" font-size="9" fill="#94a3b8" text-anchor="middle">+ optional: scene photo (P3 "REF 2") · color · requirement text · prompt pack</text>
+  <text x="600" y="122" font-size="8" fill="#64748b" text-anchor="middle">input gate: WARN-only check that the photo is a FRONT view</text>
+  <text x="600" y="136" font-size="8" fill="#64748b" text-anchor="middle">scene omitted → bundled mock dusk scene</text>
+
+  <!-- ===== STEP 1: sketch ===== -->
+  <rect x="120" y="188" width="960" height="78" rx="6" fill="#0f172a"/>
+  <rect x="120" y="188" width="960" height="78" rx="6" fill="rgba(6,78,59,0.4)" stroke="#34d399" stroke-width="1.5"/>
+  <rect x="132" y="198" width="44" height="24" rx="4" fill="rgba(52,211,153,0.2)" stroke="#34d399" stroke-width="1"/>
+  <text x="154" y="214" font-size="11" fill="#34d399" font-weight="bold" text-anchor="middle">1</text>
+  <text x="188" y="210" font-size="12" fill="#6ee7b7" font-weight="bold">sketch — front + rear design sketches (P2 + P4)</text>
+  <text x="188" y="226" font-size="9" fill="#e2e8f0">/api/flow/sketch · one call, two independent generations from the photo (no front→rear chaining — Gemini does exactly this)</text>
+  <text x="188" y="240" font-size="8" fill="#94a3b8">PCAI: Qwen-Edit GGUF i2i (front @0.8, rear @ROT_STRENGTH=1.0) · prompt: marker-render line art, "no red lamps"</text>
+  <text x="188" y="252" font-size="8" fill="#94a3b8">Gemini: two generateContent calls (P4 "another front view angle" / P2 "rear quarter view, same format…")</text>
+  <text x="188" y="262" font-size="8" fill="#f87171">gate: rear output must show the REAR (taillights/trunk) — 180°-rotation prompt; fallback: pencil sketch (deterministic)</text>
+
+  <!-- ===== STEP 2 (design gate) ===== -->
+  <rect x="120" y="298" width="960" height="94" rx="6" fill="#0f172a"/>
+  <rect x="120" y="298" width="960" height="94" rx="6" fill="rgba(76,29,149,0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+  <rect x="132" y="308" width="44" height="24" rx="4" fill="rgba(167,139,250,0.2)" stroke="#a78bfa" stroke-width="1"/>
+  <text x="154" y="324" font-size="11" fill="#a78bfa" font-weight="bold" text-anchor="middle">2</text>
+  <text x="188" y="320" font-size="12" fill="#c4b5fd" font-weight="bold">design gate — human (Mario's Photoshop box) + optional colorways</text>
+  <text x="188" y="336" font-size="9" fill="#e2e8f0">the designer edits/refines the base sketch in Photoshop, then uploads the result. This is a HUMAN step, deliberately not in the model pipeline.</text>
+  <text x="188" y="350" font-size="8" fill="#94a3b8">UI: Styling Workflow stage 4 also generates N paint-only COLORWAYS (deterministic recolor — exact same view/geometry, v21 rule)</text>
+  <text x="188" y="362" font-size="8" fill="#94a3b8">demo shortcut: "Use sample design (mock)" simulates the Photoshop pass (use_mock_design=true)</text>
+  <text x="188" y="374" font-size="8" fill="#7c6bb0">output: the chosen design image (the car as the designer wants it) → feeds step 3</text>
+
+  <!-- ===== STEP 3: combine ===== -->
+  <rect x="120" y="424" width="960" height="94" rx="6" fill="#0f172a"/>
+  <rect x="120" y="424" width="960" height="94" rx="6" fill="rgba(6,78,59,0.4)" stroke="#34d399" stroke-width="1.5"/>
+  <rect x="132" y="434" width="44" height="24" rx="4" fill="rgba(52,211,153,0.2)" stroke="#34d399" stroke-width="1"/>
+  <text x="154" y="450" font-size="11" fill="#34d399" font-weight="bold" text-anchor="middle">3</text>
+  <text x="188" y="446" font-size="12" fill="#6ee7b7" font-weight="bold">combine — integrate the car design into the scene (P3)</text>
+  <text x="188" y="462" font-size="9" fill="#e2e8f0">/api/flow/combine · design + scene (+ scene description from brain vision) → photorealistic viz, matched lighting/reflections</text>
+  <text x="188" y="476" font-size="8" fill="#94a3b8">PCAI: Qwen-Edit GGUF is SINGLE-REFERENCE → primary = single-ref i2i SCENE-GEN from the original car photo @0.85 (grounded, contact shadow)</text>
+  <text x="188" y="488" font-size="8" fill="#94a3b8">fallback: deterministic geometry-locked composite paste + low-strength harmonize (mode declared); 0.95 erases the car — 0.85 is the tuned value</text>
+  <text x="188" y="500" font-size="8" fill="#94a3b8">Gemini: native two-image integration (the true P3 prompt) · gate: car visibly inside the scene</text>
+
+  <!-- ===== STEP 4: view ===== -->
+  <rect x="120" y="550" width="960" height="94" rx="6" fill="#0f172a"/>
+  <rect x="120" y="550" width="960" height="94" rx="6" fill="rgba(6,78,59,0.4)" stroke="#34d399" stroke-width="1.5"/>
+  <rect x="132" y="560" width="44" height="24" rx="4" fill="rgba(52,211,153,0.2)" stroke="#34d399" stroke-width="1"/>
+  <text x="154" y="576" font-size="11" fill="#34d399" font-weight="bold" text-anchor="middle">4</text>
+  <text x="188" y="572" font-size="12" fill="#6ee7b7" font-weight="bold">view — re-angle the same scene (P5b alt-view) · recolor — paint swap (P5)</text>
+  <text x="188" y="588" font-size="9" fill="#e2e8f0">/api/flow/view · same car, same scene, camera moves to: side | 3/4 front | 3/4 rear | rear (i2i @ALT_VIEW_STRENGTH=0.85)</text>
+  <text x="188" y="602" font-size="8" fill="#f87171">v44/v45 fix: generic "change camera angle" drifted on Qwen-Edit GGUF (input-orientation anchoring) → explicit per-view prompts naming the exact car surfaces facing camera</text>
+  <text x="188" y="614" font-size="8" fill="#94a3b8">/api/flow/recolor · "change only the paint color to {color}" — design, body, view, position, lighting, scene unchanged</text>
+  <text x="188" y="626" font-size="8" fill="#64748b">UI: Styling Workflow stage 5 produces main / another_view / another_color in one call</text>
+
+  <!-- ===== STEP 5: video ===== -->
+  <rect x="120" y="676" width="960" height="94" rx="6" fill="#0f172a"/>
+  <rect x="120" y="676" width="960" height="94" rx="6" fill="rgba(120,53,15,0.3)" stroke="#fbbf24" stroke-width="1.5"/>
+  <rect x="132" y="686" width="44" height="24" rx="4" fill="rgba(251,191,36,0.2)" stroke="#fbbf24" stroke-width="1"/>
+  <text x="154" y="702" font-size="11" fill="#fbbf24" font-weight="bold" text-anchor="middle">5</text>
+  <text x="188" y="698" font-size="12" fill="#fcd34d" font-weight="bold">video — the styling video (P6) — the demo's money shot</text>
+  <text x="188" y="714" font-size="9" fill="#e2e8f0">/api/flow/video · final still → MP4 · 900s timeout · /api/results/{id}.mp4 (inline, faststart moov-first for browser playback)</text>
+  <text x="188" y="728" font-size="8" fill="#94a3b8">PCAI: Wan2.2-TI2V-5B (vLLM-Omni) I2V of the combined still — cinematic orbit, studio lighting, anti-drift guardrail ("strictly keep all car design elements")</text>
+  <text x="188" y="740" font-size="8" fill="#94a3b8">Gemini: Veo first/last-frame morph sketch_front → sketch_rear — that IS Mario's P6 (3s camera movement, "DO NOT IMPROVIZE")</text>
+  <text x="188" y="752" font-size="8" fill="#f87171">gate: final.mp4 &gt; 1MB with ftyp + avcC (H.264) · Quick Video tab: one-click I2V of any uploaded photo+style-ref (prompt agent steers the prompt)</text>
+
+  <!-- ===== OUTPUT ===== -->
+  <rect x="400" y="800" width="400" height="34" rx="6" fill="#0f172a"/>
+  <rect x="400" y="800" width="400" height="34" rx="6" fill="rgba(8,51,68,0.4)" stroke="#22d3ee" stroke-width="1.5"/>
+  <text x="600" y="821" font-size="10" fill="#22d3ee" font-weight="bold" text-anchor="middle">OUTPUT — final.mp4 + run_summary.json (rendered prompts, modes, engine_differences)</text>
+
+  <!-- side annotations: engine columns -->
+  <rect x="20" y="188" width="84" height="582" rx="6" fill="rgba(6,78,59,0.15)" stroke="#34d399" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="62" y="220" font-size="9" fill="#34d399" font-weight="bold" text-anchor="middle">PCAI</text>
+  <text x="62" y="234" font-size="8" fill="#6ee7b7" text-anchor="middle">on-prem</text>
+  <text x="62" y="246" font-size="8" fill="#6ee7b7" text-anchor="middle">(default)</text>
+  <text x="62" y="300" font-size="8" fill="#64748b" text-anchor="middle">Qwen-Edit</text>
+  <text x="62" y="312" font-size="8" fill="#64748b" text-anchor="middle">GGUF +</text>
+  <text x="62" y="324" font-size="8" fill="#64748b" text-anchor="middle">Wan2.2</text>
+  <text x="62" y="390" font-size="8" fill="#64748b" text-anchor="middle">scene-gen</text>
+  <text x="62" y="402" font-size="8" fill="#64748b" text-anchor="middle">@0.85</text>
+  <text x="62" y="700" font-size="8" fill="#64748b" text-anchor="middle">I2V still</text>
+  <text x="62" y="712" font-size="8" fill="#64748b" text-anchor="middle">(no first/</text>
+  <text x="62" y="724" font-size="8" fill="#64748b" text-anchor="middle">last frame)</text>
+
+  <rect x="1096" y="188" width="84" height="582" rx="6" fill="rgba(30,41,59,0.2)" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="1138" y="220" font-size="9" fill="#94a3b8" font-weight="bold" text-anchor="middle">GEMINI</text>
+  <text x="1138" y="234" font-size="8" fill="#cbd5e1" text-anchor="middle">external</text>
+  <text x="1138" y="246" font-size="8" fill="#cbd5e1" text-anchor="middle">(parity)</text>
+  <text x="1138" y="300" font-size="8" fill="#64748b" text-anchor="middle">Nano</text>
+  <text x="1138" y="312" font-size="8" fill="#64748b" text-anchor="middle">Banana</text>
+  <text x="1138" y="390" font-size="8" fill="#64748b" text-anchor="middle">native 2-image</text>
+  <text x="1138" y="402" font-size="8" fill="#64748b" text-anchor="middle">integration</text>
+  <text x="1138" y="700" font-size="8" fill="#64748b" text-anchor="middle">Veo</text>
+  <text x="1138" y="712" font-size="8" fill="#64748b" text-anchor="middle">first/last</text>
+  <text x="1138" y="724" font-size="8" fill="#64748b" text-anchor="middle">= P6</text>
+
+  <!-- legend -->
+  <rect x="20" y="824" width="1160" height="14" rx="4" fill="#0f172a" stroke="#1e293b" stroke-width="0.6"/>
+  <text x="34" y="834" font-size="8" fill="#64748b">red = quality gate / learned pitfall · purple = human step · amber = GPU video · the 6 steps = /api/flow/* endpoints (what the OpenClaw skill drives) · UI "Styling Workflow" bundles them: s4 = step 1, s5 = steps 3+4, s3 = step 5</text>
+</svg>
+</div>
+
+<div class="cards">
+  <div class="card">
+    <div class="card-header"><div class="card-dot emerald"></div><h3>Two engines, one contract</h3></div>
+    <ul>
+      <li>• PCAI on-prem: Qwen-Edit GGUF (i2i) + Wan2.2 (I2V) + qwen3-8-27b (vision brain)</li>
+      <li>• Gemini external: Nano Banana (images) + Veo (video) — request-scoped keys</li>
+      <li>• Same 6-step contract; engine differences declared in run_summary.json</li>
+      <li>• PCAI steps fall back deterministically and declare <code>mode</code></li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-dot cyan"></div><h3>UI mapping (Styling Workflow)</h3></div>
+    <ul>
+      <li>• Stage 4 → step 1 (AI base sketch: front + rear + colorways)</li>
+      <li>• Stage "design gate" → step 2 (human Photoshop, mock available)</li>
+      <li>• Stage 5 → steps 3+4 (scene compose + quick viz: view/recolor)</li>
+      <li>• Stage "video" → step 5 (2D video) · Quick Video tab = one-click step 5</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-dot violet"></div><h3>Quality gates</h3></div>
+    <ul>
+      <li>• Rear-view gate: rear sketch must show taillights/trunk</li>
+      <li>• Composite gate: car visibly integrated in the scene</li>
+      <li>• Video gate: MP4 &gt;1MB, ftyp + avcC, inline playback</li>
+      <li>• Exit code 2 = a deterministic fallback was used — always report which</li>
+    </ul>
+  </div>
+</div>
+
+<div class="footer">PCAI Styling Demo · IDD pipeline v45 · HPE Private Cloud AI · Astra Daihatsu Motor · 2026-10-09</div>
+</body>
+</html>

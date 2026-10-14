@@ -1,0 +1,29 @@
+# Prompt pack: tuned (default).
+# ONE template per step; the SAME rendered text is driven into BOTH providers.
+# Slots substituted by run_pipeline.py: {view_angle} {color} {scene_desc} {requirement}
+#
+# Workflow (identical step sequence on both engines; reference = gemini's
+# "user prompt + declared inputs only" pattern):
+#   sketch_front  -> inputs: [photo]
+#   sketch_rear   -> inputs: [photo]          (independent, same source as front)
+#   combine       -> inputs: [front, scene]   (integrate design into scene)
+#   alt_view      -> inputs: [combine]
+#   recolor       -> inputs: [combine]        (paint-only, prompt-driven)
+#   video         -> engine: gemini first/last-frame morph (front,rear) |
+#                   pcai i2v of the combined still
+
+sketch_front: "Redesign this vehicle reference into a clean automotive DESIGN SKETCH shown as a head-on FRONT view: crisp marker-render line art with subtle shading, clearly drawn headlights, front bumper and windshield (no red lamps), studio-neutral background, design-studio presentation style, same body stance, paint color and proportions as the reference. {requirement}"
+
+sketch_rear: "Automotive DESIGN SKETCH — crisp marker-render line art with subtle shading on a studio-neutral background. Same car as the input, but the viewpoint is rotated 180 degrees: the REAR (taillights, trunk lid, rear bumper, exhaust) is now the dominant face. Keep the same paint color and body proportions. Do NOT switch to a top-down view. Only the camera has moved."
+
+combine: "Integrate this car design into this scene as a polished photorealistic automotive visualization: match the scene's lighting, reflections and color temperature on the car, and keep the car's exact design, paint, view and proportions. {scene_desc}{requirement}"
+
+alt_view: "Keep the EXACT same scene, environment, lighting and the car's position within the frame, and change ONLY the camera angle to a {view_angle} view of the car. Same car model, same paint, same background. Photorealistic automotive visualization."
+
+recolor: "Change only the car's paint color to {color}. Keep the car's exact design, body shape, view, position, lighting and the scene completely unchanged."
+
+video: "Generate a cinematic video of this vehicle. Slow camera orbit revealing the design details, studio lighting, professional automotive commercial style. Strictly keep all the car design elements; do not improvise with the car design. {requirement}"
+
+# Gemini provider defaults (cheap tier per user decision). Overridable via CLI.
+image_model: "gemini-3.1-flash-image"
+video_model: "veo-3.1-fast-generate-preview"

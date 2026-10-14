@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: styling-frontend
+  namespace: styling-demo
+  labels:
+    app: styling-frontend
+    app.kubernetes.io/part-of: pcai-styling-demo
+    app.kubernetes.io/component: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: styling-frontend
+  template:
+    metadata:
+      labels:
+        app: styling-frontend
+        app.kubernetes.io/part-of: pcai-styling-demo
+        app.kubernetes.io/component: frontend
+    spec:
+      containers:
+        - name: web
+          # nginx:alpine runs its master as root to bind :80, then drops to 101
+          image: registry.ctc.sg.lab:5000/pcai-styling-frontend:v2
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 80
+          resources:
+            requests:
+              cpu: "50m"
+              memory: 64Mi
+            limits:
+              cpu: "250m"
+              memory: 128Mi
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+      imagePullSecrets:
+        - name: regcred
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: styling-frontend
+  namespace: styling-demo
+  labels:
+    app: styling-frontend
+    app.kubernetes.io/part-of: pcai-styling-demo
+spec:
+  selector:
+    app: styling-frontend
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80

@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: styling-demo
+  labels:
+    app: styling-demo
+    istio.io/rev: default
